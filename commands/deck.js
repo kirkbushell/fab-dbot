@@ -1,6 +1,7 @@
 const axios = require('axios');
 const Card = require('../Card');
 const { MessageEmbed } = require('discord.js');
+const _ = require('lodash');
 
 exports.run = async (client, message, args, level) => {
     if (!args[0]) {
@@ -25,11 +26,11 @@ exports.run = async (client, message, args, level) => {
             return card.name;
         }).join(', ');
 
-        let deckText = Card.other(cards).map(card => {
+        let deckText = _.sortBy(Card.other(cards), card => card.stats.resource).map(card => {
             let colours = {1: 'red', 2: 'yellow', 3: 'blue'};
             let text = card.total + 'x ' + card.name;
 
-            if (card.stats.resource) {
+            if (card.stats && card.stats.resource) {
                 text += ' (' + colours[card.stats.resource] + ')';
             }
 
