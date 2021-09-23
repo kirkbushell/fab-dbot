@@ -4,22 +4,20 @@
 if (Number(process.version.slice(1).split(".")[0]) < 8) throw new Error("Node 8.0.0 or higher is required. Update Node on your system.");
 
 // Load up the discord.js library
-const Discord = require("discord.js");
+const { Client, Intents } = require('discord.js');
 
 // We also load the rest of the things we need in this file:
 const { promisify } = require("util");
-const readdir = promisify(require("fs").readdir);
+const readdirSync = require("fs").readdirSync;
 const Enmap = require("enmap");
 
 // This is your client. Some people call it `bot`, some people call it `self`,
 // some might call it `cootchie`. Either way, when you see `client.something`,
 // or `bot.something`, this is what we're refering to. Your client.
-const client = new Discord.Client();
+const client = new Client({intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES], partials: ["CHANNEL"]});
 
 // Here we load the config file that contains our token and our prefix values.
 client.config = require("./config.js");
-// client.config.token contains the bot's token
-// client.config.prefix contains the message prefix
 
 // Require our logger
 client.logger = require("./modules/Logger");
@@ -44,7 +42,7 @@ client.settings = new Enmap({name: "settings"});
 const init = async () => {
     // Here we load **commands** into memory, as a collection, so they're accessible
     // here and everywhere else.
-    const cmdFiles = await readdir("./commands/");
+    const cmdFiles = readdirSync("./commands/");
     client.logger.log(`Loading a total of ${cmdFiles.length} commands.`);
     cmdFiles.forEach(f => {
         if (!f.endsWith(".js")) return;
@@ -53,17 +51,19 @@ const init = async () => {
     });
 
     // Then we load events, which will include our message and ready event.
-    const evtFiles = await readdir("./events/");
-    client.logger.log(`Loading a total of ${evtFiles.length} events.`);
-    evtFiles.forEach(file => {
-        const eventName = file.split(".")[0];
-        client.logger.log(`Loading Event: ${eventName}`);
+    const eventFiles = readdirSync('./events').filter(file => file.endsWith('.js'));
+
+    for (const file of eventFiles) {
         const event = require(`./events/${file}`);
-        // Bind the client to any event, before the existing arguments
-        // provided by the discord.js event.
-        // This line is awesome by the way. Just sayin'.
-        client.on(eventName, event.bind(null, client));
-    });
+
+        if (event.once) {
+            client.once(event.name, (...args) => event.execute(...args));
+        } else {
+            client.on(event.name, (...args) => event.execute(...args));
+        }
+
+        console.log(`Registered event ${event.name}.`);
+    }
 
     // Generate a cache of client permissions for pretty perm names in commands.
     client.levelCache = {};

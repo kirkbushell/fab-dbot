@@ -43,7 +43,7 @@ exports.run = (client, message, args, level) => {
             embed.addField(c.help.name, description);
         });
 
-        message.channel.send({embed});
+        message.channel.send({embeds: [embed]});
     } else {
         // Show individual command's help.
         let command = args[0];

@@ -17,27 +17,27 @@ module.exports = {
 
     hero(cards) {
         return cards.filter(card => {
-            return card.keywords[1] == 'hero';
+            return card.type === 'hero';
         })[0];
     },
 
     equipment(cards) {
         return cards.filter(card => {
-            return card.keywords[1] == 'equipment';
+            return card.type === 'equipment';
         });
     },
 
     weapons(cards) {
         return cards.filter(card => {
-            return card.keywords[1] == 'weapon';
+            return card.type === 'weapon';
         });
     },
 
     other(cards) {
         return cards.filter(card => {
-            return card.keywords.indexOf('weapon') == -1 &&
-                card.keywords.indexOf('equipment') == -1 &&
-                card.keywords.indexOf('hero') == -1;
+            return card.type !== 'weapon' &&
+                card.type !== 'equipment' &&
+                card.type !== 'hero';
         });
     },
 

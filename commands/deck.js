@@ -49,7 +49,7 @@ exports.run = async (client, message, args, level) => {
         embed.setDescription(deckText);
         embed.setFooter("Deck crafted @ fabdb.net", "https://fabdb.net/img/favicon-32x32.png");
 
-        message.channel.send({embed});
+        message.channel.send({embeds: [embed]});
     });
 };
 

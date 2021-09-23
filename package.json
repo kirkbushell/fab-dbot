@@ -13,14 +13,13 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^0.20.0",
-    "better-sqlite3": "^6.0.1",
-    "chalk": "^4.0.0",
-    "discord.js": "^12.3.1",
-    "enmap": "^5.2.4",
+    "chalk": "^4.1.2",
+    "discord.js": "^13.1.0",
+    "enmap": "^5.8.7",
     "inquirer": "^7.1.0",
-    "lodash": "^4.17.20",
-    "marked": "^1.1.1",
-    "moment": "^2.24.0",
+    "lodash": "^4.17.21",
+    "marked": "^1.2.9",
+    "moment": "^2.29.1",
     "moment-duration-format": "^2.3.2"
   }
 }
