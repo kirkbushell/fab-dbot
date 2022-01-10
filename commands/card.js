@@ -11,6 +11,8 @@ exports.run = async (client, message, args, level) => {
         return;
     }
 
+    client.logger.log("Found card ["+card.identifier+"]");
+
     const embed = new MessageEmbed();
 
     embed.setTitle(card.name + ' - ' + card.identifier + '-' + card.rarity.toUpperCase());
@@ -18,22 +20,22 @@ exports.run = async (client, message, args, level) => {
     embed.setURL("https://fabdb.net/cards/" + card.identifier);
 
     if (card.stats.resource) {
-        embed.addField("Resource", card.stats.resource, true);
+        embed.addField("Resource", String(card.stats.resource), true);
     }
     if (card.stats.cost) {
-        embed.addField("Cost", card.stats.cost, true);
+        embed.addField("Cost", String(card.stats.cost), true);
     }
     if (card.stats.defense) {
-        embed.addField("Defense", card.stats.defense, true);
+        embed.addField("Defense", String(card.stats.defense), true);
     }
     if (card.stats.attack) {
-        embed.addField("Power", card.stats.attack, true);
+        embed.addField("Power", String(card.stats.attack), true);
     }
     if (card.stats.life) {
-        embed.addField("Life", card.stats.life, true);
+        embed.addField("Life", String(card.stats.life), true);
     }
     if (card.stats.intellect) {
-        embed.addField("Intellect", card.stats.intellect, true);
+        embed.addField("Intellect", String(card.stats.intellect), true);
     }
 
     if (card.text) {
