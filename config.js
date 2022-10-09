@@ -11,6 +11,10 @@ const config = {
     // Your Bot's Token. Available on https://discordapp.com/developers/applications/me
     "token": process.env.FAB_DBOT_AUTH_TOKEN,
 
+    // Only necessary when testing
+    'clientId': '748501992728428625',
+    "guildId": '748509695173460010',
+
     // Default per-server settings. New guilds have these settings.
 
     // DO NOT LEAVE ANY OF THESE BLANK, AS YOU WILL NOT BE ABLE TO UPDATE THEM

@@ -1,69 +1,53 @@
-const { MessageEmbed } = require('discord.js');
+const {
+    EmbedBuilder,
+    SlashCommandBuilder
+} = require('discord.js');
 
-exports.run = (client, message, args, level) => {
-    // If no specific command is called, show all filtered commands.
-    if (!args[0]) {
+module.exports = {
+    data: new SlashCommandBuilder()
+        .setName('help')
+        .setDescription('Show a list of commands available'),
+
+    help: {
+        name: "help",
+        category: "System",
+        description: "Displays all the available commands for your permission level.",
+        usage: "help [command]"
+    },
+
+    async execute(interaction) {
+        const embed = new EmbedBuilder();
+        const client = interaction.client;
+
         // Filter all commands by which are available for the user's level, using the <Collection>.filter() method.
-        const myCommands = message.guild ? client.commands.filter(cmd => client.levelCache[cmd.conf.permLevel] <= level) : client.commands.filter(cmd => client.levelCache[cmd.conf.permLevel] <= level &&  cmd.conf.guildOnly !== true);
-
-        // Here we have to get the command names only, and we use that array to get the longest name.
-        // This make the help commands "aligned" in the output.
-        const commandNames = myCommands.keyArray();
-        const longest = commandNames.reduce((long, str) => Math.max(long, str.length), 0);
+        const myCommands = client.commands;
+        console.log(myCommands);
 
         let currentCategory = "";
-        let output = `= Command List =\n\n[Use ${message.settings.prefix}help <commandname> for details]\n`;
-        const sorted = myCommands.array().sort((p, c) => p.help.category > c.help.category ? 1 :  p.help.name > c.help.name && p.help.category === c.help.category ? 1 : -1 );
-
-        const embed = new MessageEmbed();
+        let output = `= Command List =\n\n[Use /help [command name] for details]\n`;
+        const sorted = myCommands.map(command => command.help).sort((p, c) => p.category > c.category ? 1 :  p.name > c.name && p.category === c.category ? 1 : -1 );
 
         embed.setColor('#cccccc');
         embed.setTitle('Help - Commands');
         embed.setDescription('Help regarding the various commands you can use on me.');
-        embed.setFooter("Created by fabdb.net", "https://fabdb.net/img/favicon-32x32.png");
+        embed.setFooter({ text: "Created by fabdb.net", iconURL: "https://fabdb.net/img/favicon-32x32.png"});
 
-        sorted.forEach( c => {
-            const cat = c.help.category.toProperCase();
+        sorted.forEach(c => {
+            let description = c.description;
 
-            if (currentCategory !== cat) {
-                output += `\u200b\n== ${cat} ==\n`;
-                currentCategory = cat;
-            }
-
-            let description = c.help.description;
-
-            if (c.help.examples) {
+            if (c.examples) {
                 description += "\r\n**Examples**:";
-                c.help.examples.forEach(example => {
-                    description += "\r\n" + message.settings.prefix + example;
+
+                c.examples.forEach(example => {
+                    description += "\r\n/" + example;
                 });
+
                 description += "\r\n";
             }
 
-            embed.addField(c.help.name, description);
+            embed.addFields({name: c.name, value: description});
         });
 
-        message.channel.send({embeds: [embed]});
-    } else {
-        // Show individual command's help.
-        let command = args[0];
-        if (client.commands.has(command)) {
-            command = client.commands.get(command);
-            if (level < client.levelCache[command.conf.permLevel]) return;
-            message.channel.send(`= ${command.help.name} = \n${command.help.description}\nusage:: ${command.help.usage}\n= ${command.help.name} =`, {code:"asciidoc"});
-        }
+        await interaction.reply({ embeds: [embed]});
     }
-};
-
-exports.conf = {
-    enabled: true,
-    guildOnly: false,
-    permLevel: "User"
-};
-
-exports.help = {
-    name: "help",
-    category: "System",
-    description: "Displays all the available commands for your permission level.",
-    usage: "help [command]"
 };

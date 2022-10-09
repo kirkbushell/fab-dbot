@@ -3,8 +3,9 @@ const axios = require('axios');
 module.exports = {
     url: 'https://api.fabdb.net/cards',
 
-    any: async function(params) {
+    any: async function(input) {
         let url = this.url+'/first';
+        let params = input.split(' ');
 
         if (params.length > 1) {
             let colour = params[0];
@@ -33,11 +34,13 @@ module.exports = {
         return axios.get(this.url+'/'+identifier).then(response => response.data);
     },
 
-    findDepending: async function(params) {
+    findDepending: async function(input) {
+        let params = input.split(' ');
+
         if (params[0].match(/^[a-z]{3}[0-9]{3}$/i)) {
             return await this.find(params[0]);
         }
 
-        return await this.any(params);
+        return await this.any(input);
     }
 };

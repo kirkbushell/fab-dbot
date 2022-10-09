@@ -2,7 +2,7 @@ const marked = require('marked');
 const Discord = require('discord.js');
 
 module.exports = {
-    prettified: function(text) {
+    prettified(text) {
         let content = text.split('\n');
 
         content = content.map(line => {
@@ -46,6 +46,18 @@ module.exports = {
         };
 
         return '<'+emojis[effect]+'>';
+    },
 
+    deckSlug(string) {
+        if (string.indexOf('/build') !== -1) {
+            return string.split('/')[5];
+        }
+
+        if (string.indexOf('http') !== -1) {
+            return string.split('/')[4];
+        }
+
+        // Assume they provided the actual code
+        return string;
     }
 };

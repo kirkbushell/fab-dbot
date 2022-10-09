@@ -1,65 +1,77 @@
-const axios = require('axios');
-const { MessageEmbed } = require('discord.js');
+const {
+    EmbedBuilder,
+    SlashCommandBuilder
+} = require('discord.js');
+
 const Strings = require('../Strings');
 const CardSearch = require('../CardSearch');
 
-exports.run = async (client, message, args, level) => {
-    let card = await CardSearch.findDepending(args);
+module.exports = {
+    data: new SlashCommandBuilder()
+        .setName('card')
+        .setDescription('Search for and display a single card.')
+        .addStringOption(option =>
+            option.setName('name')
+                .setDescription('Enter a card name.')
+                .setRequired(true)
+        ),
 
-    if (!card) {
-        message.reply('No cards matching that :pensive:');
-        return;
+    help: {
+        name: "card",
+        category: "Cards",
+        description: "Search for and display a single card.",
+        examples: [
+            "card WTR000",
+            "card heart",
+            "card red warrior's valor"
+        ]
+    },
+
+    async execute(interaction) {
+        const embed = new EmbedBuilder();
+        const client = interaction.client;
+        const input = interaction.options.getString('name');
+
+        client.logger.log("Searching for: ["+input+"]");
+
+        let card = await CardSearch.findDepending(input);
+
+        if (!card) {
+            interaction.reply('No cards matching that name :pensive:');
+            return;
+        }
+
+        client.logger.log("Found card ["+card.identifier+"]");
+
+        embed.setTitle(card.name);
+        embed.setImage(card.image);
+        embed.setURL("https://fabdb.net/cards/" + card.identifier);
+
+        if (card.stats.resource) {
+            embed.addFields({name: "Resource", value: String(card.stats.resource)});
+        }
+        if (card.stats.cost) {
+            embed.addFields({name: "Cost", value: String(card.stats.cost)});
+        }
+        if (card.stats.defense) {
+            embed.addFields({name: "Defense", value: String(card.stats.defense)});
+        }
+        if (card.stats.attack) {
+            embed.addFields({name: "Power", value: String(card.stats.attack)});
+        }
+        if (card.stats.life) {
+            embed.addFields({name: "Life", value: String(card.stats.life)});
+        }
+        if (card.stats.intellect) {
+            embed.addFields({name: "Intellect", value: String(card.stats.intellect)});
+        }
+
+        if (card.text) {
+            embed.setDescription(Strings.prettified(card.text));
+        }
+
+        embed.setFooter({text: "View more @ fabdb.net", iconURL: "https://fabdb.net/img/favicon-32x32.png"});
+
+        await interaction.reply({ embeds: [embed]});
     }
-
-    client.logger.log("Found card ["+card.identifier+"]");
-
-    const embed = new MessageEmbed();
-
-    embed.setTitle(card.name + ' - ' + card.identifier + '-' + card.rarity.toUpperCase());
-    embed.setImage(card.image);
-    embed.setURL("https://fabdb.net/cards/" + card.identifier);
-
-    if (card.stats.resource) {
-        embed.addField("Resource", String(card.stats.resource), true);
-    }
-    if (card.stats.cost) {
-        embed.addField("Cost", String(card.stats.cost), true);
-    }
-    if (card.stats.defense) {
-        embed.addField("Defense", String(card.stats.defense), true);
-    }
-    if (card.stats.attack) {
-        embed.addField("Power", String(card.stats.attack), true);
-    }
-    if (card.stats.life) {
-        embed.addField("Life", String(card.stats.life), true);
-    }
-    if (card.stats.intellect) {
-        embed.addField("Intellect", String(card.stats.intellect), true);
-    }
-
-    if (card.text) {
-        embed.setDescription(Strings.prettified(card.text));
-    }
-
-    embed.setFooter("View more @ fabdb.net", "https://fabdb.net/img/favicon-32x32.png");
-
-    message.channel.send({embeds: [embed]});
-};
-
-exports.conf = {
-    enabled: true,
-    guildOnly: false,
-    permLevel: "User"
-};
-
-exports.help = {
-    name: "card",
-    category: "Cards",
-    description: "Search for and display a single card.",
-    examples: [
-        "card WTR000",
-        "card heart",
-        "card red warrior's valor"
-    ]
 };

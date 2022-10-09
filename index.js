@@ -1,81 +1,40 @@
-// This will check if the node version you are running is the required
-// Node version, if it isn't it will throw the following error to inform
-// you.
-if (Number(process.version.slice(1).split(".")[0]) < 8) throw new Error("Node 8.0.0 or higher is required. Update Node on your system.");
+const fs = require('node:fs');
+const path = require('node:path');
+const { Client, Collection, GatewayIntentBits } = require('discord.js');
+const { token } = require('./config.js');
+const Logger = require('./modules/Logger');
 
-// Load up the discord.js library
-const { Client, Intents } = require('discord.js');
+const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
-// We also load the rest of the things we need in this file:
-const { promisify } = require("util");
-const readdirSync = require("fs").readdirSync;
-const Enmap = require("enmap");
+client.logger = Logger;
+client.commands = new Collection();
 
-// This is your client. Some people call it `bot`, some people call it `self`,
-// some might call it `cootchie`. Either way, when you see `client.something`,
-// or `bot.something`, this is what we're refering to. Your client.
-const client = new Client({intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES], partials: ["CHANNEL"]});
+const commandsPath = path.join(__dirname, 'commands');
+const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
-// Here we load the config file that contains our token and our prefix values.
-client.config = require("./config.js");
+for (const file of commandFiles) {
+    const filePath = path.join(commandsPath, file);
+    const command = require(filePath);
+    client.commands.set(command.data.name, command);
+}
 
-// Require our logger
-client.logger = require("./modules/Logger");
+client.once('ready', () => {
+    console.log('Ready!');
+});
 
-// Let's start by getting some useful functions that we'll use throughout
-// the bot, like logs and elevation features.
-require("./modules/functions.js")(client);
+client.on('interactionCreate', async interaction => {
+    if (!interaction.isChatInputCommand()) return;
 
-// Aliases and commands are put in collections where they can be read from,
-// catalogued, listed, etc.
-client.commands = new Enmap();
-client.aliases = new Enmap();
+    const command = client.commands.get(interaction.commandName);
 
-// Now we integrate the use of Evie's awesome EnMap module, which
-// essentially saves a collection to disk. This is great for per-server configs,
-// and makes things extremely easy for this purpose.
-client.settings = new Enmap({name: "settings"});
+    if (!command) return;
 
-// We're doing real fancy node 8 async/await stuff here, and to do that
-// we need to wrap stuff in an anonymous function. It's annoying but it works.
-
-const init = async () => {
-    // Here we load **commands** into memory, as a collection, so they're accessible
-    // here and everywhere else.
-    const cmdFiles = readdirSync("./commands/");
-    client.logger.log(`Loading a total of ${cmdFiles.length} commands.`);
-    cmdFiles.forEach(f => {
-        if (!f.endsWith(".js")) return;
-        const response = client.loadCommand(f);
-        if (response) console.log(response);
-    });
-
-    // Then we load events, which will include our message and ready event.
-    const eventFiles = readdirSync('./events').filter(file => file.endsWith('.js'));
-
-    for (const file of eventFiles) {
-        const event = require(`./events/${file}`);
-
-        if (event.once) {
-            client.once(event.name, (...args) => event.execute(...args));
-        } else {
-            client.on(event.name, (...args) => event.execute(...args));
-        }
-
-        console.log(`Registered event ${event.name}.`);
+    try {
+        await command.execute(interaction);
+    } catch (error) {
+        console.error(error);
+        await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
     }
+});
 
-    // Generate a cache of client permissions for pretty perm names in commands.
-    client.levelCache = {};
-    for (let i = 0; i < client.config.permLevels.length; i++) {
-        const thisLevel = client.config.permLevels[i];
-        client.levelCache[thisLevel.name] = thisLevel.level;
-    }
-
-    // Here we login the client.
-    client.login(client.config.token);
-
-// End top-level async/await function.
-};
-
-init();
+client.login(token);
